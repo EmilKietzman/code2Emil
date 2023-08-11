@@ -1,0 +1,26 @@
+name: Spellcheck
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  spellcheck:
+    strategy:
+      matrix:
+        os: ["ubuntu-latest"]
+    runs-on: ${{ matrix.os }}
+    env:
+      RUSTC_WRAPPER: ""
+    container:
+      image: "paritytech/ink-waterfall-ci:latest"
+    steps:
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - name: Run spellcheck
+        shell: bash
+        run: |
+          cd ./contract
+          cargo spellcheck check -vvvv --cfg=.config/cargo_spellcheck.toml --checkers hunspell --code 1
