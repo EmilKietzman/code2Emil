@@ -1,7 +1,7 @@
 {
   "name": "contract",
   "version": "1.0.0",
-  "author": "	Mar.io",
+  "author": "Mar.io",
   "license": "MIT",
   "scripts": {
     "run-node": "swanky node start",
@@ -11,6 +11,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@Brushfam/openbrush-contracts": "4.0.0-beta",
     "@727-ventures/typechain-types": "1.0.0-beta.1",
     "@727-ventures/typechain-polkadot": "1.0.0-beta.2",
     "@types/node": "^18",

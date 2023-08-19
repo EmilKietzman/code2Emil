@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@727-ventures/typechain-polkadot": "^1.1.1",
+    "useink": "^1.13.0"
+  }
+}

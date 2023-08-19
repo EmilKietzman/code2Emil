@@ -1,17 +1,22 @@
 [package]
-name = "magink"
+name = "magicink"
 version = "0.1.0"
-authors = ["Mar.io"]
+authors = ["EmilKietzman"]
 edition = "2021"
 
 [dependencies]
-ink = { version = "4.2", default-features = false }
-
+ink = { version = "4.0.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-scale-info = { version = "2.5", default-features = false, features = ["derive"], optional = true }
+scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
+ink-wrapper-types = "0.5.0"
 
 [lib]
-path = "lib.rs"
+name = "magicink"
+path = "src/lib.rs"
+crate-type = [
+    # Used for normal contract Wasm blobs.
+    "cdylib",
+]
 
 [features]
 default = ["std"]
@@ -20,5 +25,8 @@ std = [
     "scale/std",
     "scale-info/std"
 ]
+[profile.release]
+overflow-checks = false
+[profile.dev]
+overflow-checks = false
 ink-as-dependency = []
-e2e-tests = []

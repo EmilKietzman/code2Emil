@@ -2,9 +2,11 @@
 
 #[ink::contract]
 pub mod magink {
-    use crate::ensure;
+    use crate::ensure;swan
     use ink::storage::Mapping;
-
+    use openbrush::traits::Storage;
+    use wizard::wizard;
+    ownable::Internal::_init_with_owner(&mut _instance, Self::env().caller());
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum Error {
@@ -117,9 +119,181 @@ pub mod magink {
             self.get_account_profile(account).map_or(0, |profile| profile.badges_claimed)
         }
 
+        #[ink(message)]
+        pub fn mint_wizard(&mut self, to: AccountId, token_id: u64) -> Result<(), ink_env::Error> {
+            // Ensure the user has collected all badges (you can use your criteria here)
+            ensure!(self.get_badges() >= REQUIRED_BADGES, Error::InsufficientBadges);
+    
+            // Get a reference to the wizard contract
+            let wizard_contract = self.env().account_id::<wizard::Wizard>();
+    
+            // Call the mint function on the wizard contract
+            wizard_contract.mint(to, token_id)?;
+    
+            Ok(())
+
     }
 
-    #[cfg(test)]
+    #![cfg_attr(not(feature = "std"), no_std)]
+
+use ink_lang as ink;
+use ink_prelude::string::String;
+
+#[ink::contract]
+mod wizard_contract {
+    use ink_storage::collections::HashMap as StorageHashMap;
+    use ink_prelude::string::String;
+
+    #[ink(storage)]
+    pub struct WizardContract {
+        owner: AccountId,
+        wizards: StorageHashMap<u32, AccountId>,
+    }
+
+    impl WizardContract {
+        #[ink(constructor)]
+        pub fn new() -> Self {
+            Self {
+                owner: Self::env().caller(),
+                wizards: StorageHashMap::new(),
+            }
+        }
+
+        // Mint a Wizard-NFT
+        #[ink(message)]
+        pub fn mint_wizard(&mut self, recipient: AccountId, token_id: u32) -> Result<(), String> {
+            self.ensure_owner()?;
+            if self.wizards.contains_key(&token_id) {
+                return Err(String::from("Token already minted"));
+            }
+            self.wizards.insert(token_id, recipient);
+            
+            // Emit the Transfer event
+            self.env().emit_event(Transfer {
+                from: AccountId::from([0x00; 32]), // Replace with appropriate value
+                to: recipient,
+                token_id,
+            });
+
+            Ok(())
+        }
+
+        // Transfer a Wizard-NFT
+        #[ink(message)]
+        pub fn transfer(&mut self, to: AccountId, token_id: u32) -> Result<(), String> {
+            self.ensure_owner()?;
+            let owner = self.wizards.get(&token_id)
+                .ok_or_else(|| String::from("Token not minted"))?;
+            self.wizards.insert(token_id, to);
+
+            // Emit the Transfer event
+            self.env().emit_event(Transfer {
+                from: owner,
+                to,
+                token_id,
+            });
+
+            Ok(())
+        }
+
+        // Helper function to ensure the sender is the contract owner
+        fn ensure_owner(&self) -> Result<(), String> {
+            let caller = self.env().caller();
+            if caller != self.owner {
+                return Err(String::from("Only contract owner can perform this action"));
+            }
+            Ok(())
+        }
+        
+        // Define the Transfer event for NFT minting and transferring
+        #[ink(event)]
+        pub struct Transfer {
+            #[ink(topic)]
+            from: AccountId,
+            #[ink(topic)]
+            to: AccountId,
+            #[ink(topic)]
+            token_id: u32,
+        }
+    }
+}
+
+
+    #![cfg(test)]
+
+use ink_lang as ink;
+use ink_env::Environment;
+use ink_env::test::*;
+use ink_prelude::string::String;
+
+#[ink::test]
+fn e2e_tests() {
+    // Arrange
+    let accounts = default_accounts::<Environment>();
+    let mut magink = Magink::new();
+    let mut wizard = WizardContract::new();
+
+    // Deploy the contracts
+    let magink_instance = deploy_contract::<Magink>(
+        ink_env::call::CreateBuilder::default()
+            .caller(accounts.alice)
+            .gas_limit(1_000_000)
+            .endowment(1_000_000)
+            .code(magink.code_hash().to_vec()),
+    );
+
+    let wizard_instance = deploy_contract::<WizardContract>(
+        ink_env::call::CreateBuilder::default()
+            .caller(accounts.bob)
+            .gas_limit(1_000_000)
+            .endowment(1_000_000)
+            .code(wizard.code_hash().to_vec()),
+    );
+
+
+    execute_contract_call(
+        &mut magink,
+        &magink_instance,
+        accounts.alice,
+        magink_instance.env().block_number() + 1,
+        10,
+        "start",
+    );
+
+ 
+    advance_block();
+    execute_contract_call(
+        &mut magink,
+        &magink_instance,
+        accounts.alice,
+        magink_instance.env().block_number() + 1,
+        0,
+        "claim",
+    );
+
+    // User mints a Wizard-NFT
+    execute_contract_call(
+        &mut magink,
+        &magink_instance,
+        accounts.alice, // Caller
+        0,              // Gas limit
+        0,           
+        "mint_wizard",  // Call the mint_wizard function
+    );
+
+    assert_eq!(magink.get_badges(), 1);
+
+    let owner_of_wizard_nft = wizard_instance.call(
+        "owner_of",
+        vec![
+wizard_contract.mint_wizard(account_id, 1)?;
+wizard_contract.mint_wizard(account_id, 2)?;
+
+        ],
+    );
+    let total_supply = wizard_instance.call("total_supply", vec![]);
+
+}
     mod tests {
         use super::*;
 
